@@ -1,0 +1,22 @@
+{
+  "name": "skitii-music-ranking-docs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Build Skitii product documentation PDFs",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-pdf.mjs",
+    "build:compliance": "node scripts/build-compliance-pdf.mjs",
+    "build:15day-tasks": "node scripts/build-15day-tasks-pdf.mjs",
+    "build:database": "node scripts/build-database-pdf.mjs",
+    "build:weekly-forms": "node scripts/build-weekly-forms-pdf.mjs",
+    "build:ai-roadmap": "node scripts/build-ai-learning-roadmap-pdf.mjs",
+    "build:pi-setup": "node scripts/build-pi-setup-pdf.mjs",
+    "build:tablet-security": "node scripts/build-tablet-security-pdf.mjs",
+    "build:remote-control": "node scripts/build-remote-control-pdf.mjs"
+  },
+  "dependencies": {
+    "marked": "^15.0.12",
+    "puppeteer": "^24.10.2"
+  }
+}

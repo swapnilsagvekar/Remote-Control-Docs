@@ -1,0 +1,26 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'fontSize': '17px',
+    'fontFamily': 'Inter, Arial, sans-serif',
+    'primaryTextColor': '#0f172a',
+    'lineColor': '#334155',
+    'primaryColor': '#ccfbf1',
+    'primaryBorderColor': '#0f766e'
+  },
+  'flowchart': { 'nodeSpacing': 36, 'rankSpacing': 40, 'padding': 16 }
+}}%%
+flowchart TD
+    A[Session starts] --> B{Which cycle?}
+    B -->|Cycle 1| C[Use Heart Rate]
+    B -->|Cycle 2+| D[Use RMSSD]
+    C --> E[Pick music category]
+    D --> F{RMSSD change vs last?}
+    F -->|≤ 20%| G[Keep category + track]
+    F -->|> 20%| H[Recalculate category]
+    H --> I{Category changed?}
+    I -->|Yes| J[New category pool]
+    I -->|No| K[Next ranked track]
+    E --> L[Find candidate tracks]
+    J --> L
+    K --> L

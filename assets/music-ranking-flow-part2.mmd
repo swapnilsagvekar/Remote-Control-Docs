@@ -1,0 +1,20 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'fontSize': '17px',
+    'fontFamily': 'Inter, Arial, sans-serif',
+    'primaryTextColor': '#0f172a',
+    'lineColor': '#334155',
+    'primaryColor': '#ccfbf1',
+    'primaryBorderColor': '#0f766e'
+  },
+  'flowchart': { 'nodeSpacing': 36, 'rankSpacing': 40, 'padding': 16 }
+}}%%
+flowchart TD
+    L[Find candidate tracks] --> M[Sort by ranking]
+    M --> N{Personalization on?}
+    N -->|No| O[Global ranking G]
+    N -->|Yes| P[Patient ranking P]
+    O --> Q[Play selected track]
+    P --> Q
+    Q --> R[Update ranking +1 / 0 / -1]

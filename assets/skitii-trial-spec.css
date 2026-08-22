@@ -1,0 +1,275 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap");
+
+:root {
+  --ink:          #0f172a;
+  --muted:        #64748b;
+  --border:       #cbd5e1;
+  --surface:      #f8fafc;
+  --primary:      #0d6ec8;
+  --primary-dark: #0a5aa8;
+  --primary-soft: #dbeafe;
+  --teal:         #0d9488;
+  --teal-dark:    #0f766e;
+  --teal-soft:    #ccfbf1;
+  --heading:      #0c2d6b;
+}
+
+@page { size: A4; margin: 18mm 16mm 18mm; }
+
+* { box-sizing: border-box; }
+html { font-size: 10.5pt; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  background: #fff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ═══════════════════════════════════
+   COVER PAGE
+═══════════════════════════════════ */
+.cover {
+  page-break-after: always;
+  min-height: 230mm;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(160deg, #eef4ff 0%, #ffffff 45%, #e6faf8 100%);
+  border-bottom: 5px solid var(--teal);
+  padding: 12mm 0 10mm;
+}
+
+.cover-hero {
+  flex: 1;
+  padding: 10mm 0 8mm;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.cover-kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--teal-dark);
+  margin-bottom: 16px;
+}
+
+/* override generic h1 inside cover */
+.cover h1 {
+  font-family: "Source Serif 4", Georgia, serif !important;
+  font-size: 2.5rem !important;
+  line-height: 1.2 !important;
+  color: var(--heading) !important;
+  margin: 0 0 16px !important;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  max-width: 26rem;
+  text-align: center;
+}
+
+.cover-sub {
+  font-size: 1rem;
+  color: var(--muted);
+  margin: 0 auto;
+  max-width: 28rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.cover-meta {
+  margin-top: auto;
+  padding: 8mm 0 0;
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 32px;
+}
+
+.cover-meta-item strong {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+
+.cover-meta-item span {
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* ═══════════════════════════════════
+   CONTENT HEADINGS
+═══════════════════════════════════ */
+h1, h2, h3 {
+  font-family: "Source Serif 4", Georgia, serif;
+  line-height: 1.25;
+  page-break-after: avoid;
+}
+
+.content h1 {
+  font-size: 1.5rem;
+  color: var(--heading);
+  margin: 1.8rem 0 0.7rem;
+  padding: 0.5rem 0.9rem;
+  background: var(--primary-soft);
+  border-left: 5px solid var(--primary);
+  border-radius: 0 6px 6px 0;
+}
+
+.content h2 {
+  font-size: 1.18rem;
+  color: var(--heading);
+  margin: 1.5rem 0 0.55rem;
+  padding-left: 10px;
+  border-left: 3px solid var(--teal);
+}
+
+.content h3 {
+  font-size: 0.98rem;
+  color: var(--teal-dark);
+  margin: 1rem 0 0.4rem;
+}
+
+/* ═══════════════════════════════════
+   BODY
+═══════════════════════════════════ */
+p { margin: 0.5rem 0 0.85rem; }
+
+ul, ol {
+  margin: 0.4rem 0 0.9rem;
+  padding-left: 1.4rem;
+}
+
+li { margin: 0.3rem 0; }
+li::marker { color: var(--primary); }
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 1.4rem 0;
+}
+
+strong { color: var(--heading); font-weight: 600; }
+em { color: #334155; }
+
+/* ═══════════════════════════════════
+   BLOCKQUOTE
+═══════════════════════════════════ */
+blockquote {
+  margin: 0.6rem 0 0.9rem;
+  padding: 0.65rem 0.9rem;
+  border-left: 4px solid var(--teal);
+  background: var(--teal-soft);
+  color: #134e4a;
+  border-radius: 0 8px 8px 0;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  page-break-before: avoid;
+  break-before: avoid;
+}
+blockquote p { margin: 0; }
+blockquote p + p { margin-top: 0.45rem; }
+
+/* Keep notes with the code block above them */
+pre + blockquote {
+  page-break-before: avoid;
+  break-before: avoid;
+  margin-top: 0.35rem;
+}
+
+/* ═══════════════════════════════════
+   CODE
+═══════════════════════════════════ */
+code {
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 0.87em;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 0.07rem 0.3rem;
+}
+
+pre {
+  margin: 0.8rem 0 0.5rem;
+  padding: 0.75rem 0.9rem;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 8px;
+  /* Allow split — avoid forces large white gaps when the block nearly fills a page */
+  page-break-inside: auto;
+  break-inside: auto;
+}
+
+pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+/* ═══════════════════════════════════
+   TABLES
+═══════════════════════════════════ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8rem 0 1.2rem;
+  font-size: 0.9rem;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Keep bold paragraph labels (e.g. "PIN lifecycle:") with the following table */
+p + table,
+p strong + table {
+  break-before: avoid;
+}
+
+p:has(strong) {
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+thead { display: table-header-group; }
+
+th {
+  background: var(--heading);
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.86rem;
+}
+
+th code {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+
+td {
+  padding: 0.46rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+tbody tr:nth-child(even) td {
+  background: var(--surface);
+}
+
+.content { padding: 0 1mm; }

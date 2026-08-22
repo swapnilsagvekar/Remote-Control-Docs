@@ -1,0 +1,485 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Skitii Trial — Mobile (Tablet) API",
+    "description": "Institution/tablet Trial Backend APIs (not Admin Panel).\n\n**Auth flow**\n1. `Auth (Main GraphQL)` → Send OTP / Verify OTP against main Skitii Backend (`GRAPHQL_URL`).\n2. Verify OTP sets `accessToken` collection variable.\n3. All Trial Backend requests use `Authorization: Bearer {{accessToken}}`.\n\n**Patients list filters** (dashboard)\n- `shift`: `1` | `2` | `3` | `All`\n- `sessionStatus`: `pending` | `completed` | `missed` | `All`\n- `weekly`: `Weekly Pending` | `Weekly Submitted`\n- `search`, `page`, `limit`\n\nScope (`institutionId` / `trialId`) comes from the JWT — do not pass them as query params.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "graphqlUrl", "value": "http://127.0.0.1:3001/graphql" },
+    { "key": "trialApiUrl", "value": "http://127.0.0.1:3010" },
+    { "key": "institutionEmail", "value": "trial@yenepoya.edu.in" },
+    { "key": "otp", "value": "" },
+    { "key": "accessToken", "value": "" },
+    { "key": "deviceId", "value": "yenepoya-tablet-1" },
+    { "key": "patientId", "value": "" },
+    { "key": "search", "value": "Week0" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth (Main GraphQL)",
+      "description": "Login OTP via existing Skitii Backend. No Bearer required.",
+      "item": [
+        {
+          "name": "Send OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('No GraphQL errors', () => pm.expect(j.errors).to.be.undefined);",
+                  "pm.test('sendOtp success', () => pm.expect(j.data.sendOtp.success).to.eql(true));",
+                  "if (j.data?.sendOtp?.mockOtp) {",
+                  "  pm.collectionVariables.set('otp', j.data.sendOtp.mockOtp);",
+                  "  console.log('Saved mockOtp to {{otp}}');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "apollo-require-preflight", "value": "true" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($input: SendOtpInput!) { sendOtp(input: $input) { success message mockOtp } }\",\n  \"variables\": {\n    \"input\": {\n      \"email\": \"{{institutionEmail}}\"\n    }\n  }\n}"
+            },
+            "url": "{{graphqlUrl}}",
+            "description": "Sends OTP to institute login email. In non-prod, `mockOtp` may be returned and is auto-saved to `{{otp}}`."
+          }
+        },
+        {
+          "name": "Verify OTP → save accessToken",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('No GraphQL errors', () => pm.expect(j.errors).to.be.undefined);",
+                  "const token = j.data?.verifyOtp?.accessToken;",
+                  "pm.test('accessToken present', () => pm.expect(token).to.be.a('string').and.not.empty);",
+                  "if (token) {",
+                  "  pm.collectionVariables.set('accessToken', token);",
+                  "  console.log('Saved accessToken');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "apollo-require-preflight", "value": "true" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($input: VerifyOtpInput!) { verifyOtp(input: $input) { accessToken message } }\",\n  \"variables\": {\n    \"input\": {\n      \"email\": \"{{institutionEmail}}\",\n      \"otp\": \"{{otp}}\"\n    }\n  }\n}"
+            },
+            "url": "{{graphqlUrl}}",
+            "description": "Verifies OTP and stores JWT in collection variable `accessToken` for Trial Backend calls."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth (Trial) — Forgot Device PIN",
+      "description": "Requires institution JWT from Verify OTP. Resets device PIN via institute email OTP.",
+      "item": [
+        {
+          "name": "Forgot PIN — Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{deviceId}}\"\n}"
+            },
+            "url": "{{trialApiUrl}}/auth/forgot-pin/send-otp",
+            "description": "Sends OTP to institute email for device PIN reset."
+          }
+        },
+        {
+          "name": "Forgot PIN — Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{deviceId}}\",\n  \"otp\": \"{{otp}}\"\n}"
+            },
+            "url": "{{trialApiUrl}}/auth/forgot-pin/verify-otp",
+            "description": "Verifies OTP and clears PIN for `deviceId`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patients — CRUD",
+      "item": [
+        {
+          "name": "Create patient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Created', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "const j = pm.response.json();",
+                  "const id = j._id || j.id;",
+                  "if (id) {",
+                  "  pm.collectionVariables.set('patientId', id);",
+                  "  console.log('Saved patientId', id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Postman\",\n  \"lastName\": \"Patient\",\n  \"registrationNo\": \"PM-{{$timestamp}}\",\n  \"age\": 45,\n  \"gender\": \"female\",\n  \"emergencyNumber\": \"9000000000\",\n  \"languagePreference\": \"English\",\n  \"enrollmentDate\": \"2026-07-30\",\n  \"groupType\": \"adaptive\",\n  \"diagnosisStage\": \"Stage 2\",\n  \"treatmentType\": \"Radiotherapy\",\n  \"cancerSite\": \"Oral\",\n  \"ecogScore\": \"1\",\n  \"surgicalType\": \"Pre-Operative\"\n}"
+            },
+            "url": "{{trialApiUrl}}/patients",
+            "description": "Enroll a new patient. Saves `_id` to `{{patientId}}`.\n\n`enrollmentDate` must be `YYYY-MM-DD`."
+          }
+        },
+        {
+          "name": "Get patient by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{trialApiUrl}}/patients/{{patientId}}",
+            "description": "Patient detail + dashboard chips for today clinical day."
+          }
+        },
+        {
+          "name": "Update patient (before Week 0)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"languagePreference\": \"Kannada\",\n  \"emergencyNumber\": \"9000000001\"\n}"
+            },
+            "url": "{{trialApiUrl}}/patients/{{patientId}}",
+            "description": "Blocked after Week 0 is submitted (`PATIENT_LOCKED`)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patients — List scenarios",
+      "description": "Mobile dashboard list (`GET /patients`) with all filter combinations used by the tablet.",
+      "item": [
+        {
+          "name": "List — default page",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('has items/total/date', () => {",
+                  "  pm.expect(j).to.have.property('items');",
+                  "  pm.expect(j).to.have.property('total');",
+                  "  pm.expect(j).to.have.property('date');",
+                  "});",
+                  "if (Array.isArray(j.items) && j.items[0]?._id) {",
+                  "  pm.collectionVariables.set('patientId', j.items[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?page=1&limit=20",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "Paginated list sorted: pending sessions first, then middle, all-missed last. Saves first item `_id` to `{{patientId}}`."
+          }
+        },
+        {
+          "name": "List — search",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?search={{search}}",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [{ "key": "search", "value": "{{search}}" }]
+            },
+            "description": "Case-insensitive match on firstName / lastName."
+          }
+        },
+        {
+          "name": "List — shift=1",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?shift=1",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [{ "key": "shift", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "List — shift=2",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?shift=2",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [{ "key": "shift", "value": "2" }]
+            }
+          }
+        },
+        {
+          "name": "List — shift=3",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?shift=3",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [{ "key": "shift", "value": "3" }]
+            }
+          }
+        },
+        {
+          "name": "List — sessionStatus=pending",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?sessionStatus=pending",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [{ "key": "sessionStatus", "value": "pending" }]
+            },
+            "description": "Patients with start / resume / restart on any (or filtered) shift."
+          }
+        },
+        {
+          "name": "List — sessionStatus=completed",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?sessionStatus=completed",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [{ "key": "sessionStatus", "value": "completed" }]
+            },
+            "description": "done actionButton or postFormStatus=submitted."
+          }
+        },
+        {
+          "name": "List — sessionStatus=missed",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?sessionStatus=missed",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [{ "key": "sessionStatus", "value": "missed" }]
+            },
+            "description": "missed actionButton or shiftStatus=missed."
+          }
+        },
+        {
+          "name": "List — weekly=Weekly Pending",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?weekly=Weekly%20Pending",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [{ "key": "weekly", "value": "Weekly Pending" }]
+            },
+            "description": "dashboard.weekly.status === pending (includes Week 0 pre-enrollment)."
+          }
+        },
+        {
+          "name": "List — weekly=Weekly Submitted",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?weekly=Weekly%20Submitted",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [{ "key": "weekly", "value": "Weekly Submitted" }]
+            },
+            "description": "dashboard.weekly.status === done."
+          }
+        },
+        {
+          "name": "List — combined shift + pending + Weekly Pending",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?shift=2&sessionStatus=pending&weekly=Weekly%20Pending",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [
+                { "key": "shift", "value": "2" },
+                { "key": "sessionStatus", "value": "pending" },
+                { "key": "weekly", "value": "Weekly Pending" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List — combined shift=1 + missed",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?shift=1&sessionStatus=missed",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [
+                { "key": "shift", "value": "1" },
+                { "key": "sessionStatus", "value": "missed" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List — page 2",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?page=2&limit=5",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [
+                { "key": "page", "value": "2" },
+                { "key": "limit", "value": "5" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patients — Scenario notes (seed SCN-*)",
+      "description": "After `npm run seed` in Trial Backend, registrationNos map to dashboard scenarios:\n\n| Reg No | Scenario |\n|---|---|\n| SCN-W0-NS | Week 0 not submitted |\n| SCN-PRE-ENR | Before enrollment |\n| SCN-START | Pending Start |\n| SCN-RESUME | Active → Resume |\n| SCN-DONE | Session Done |\n| SCN-RESTART | Incomplete → Restart |\n| SCN-ALL-MISS | All shifts missed (clock-dependent) |\n| SCN-W2-PEND | Week 2 pending |\n| SCN-W2-MISS | Week 2 missed |\n| SCN-W-DONE | All weekly done |\n| SCN-TRIAL-DONE | Trial completed |\n| SCN-W0-GAP | Week 0 missed gap |\n\nUse **List — search** with e.g. `Week0` / `Pending` / `Resume` to isolate them.",
+      "item": [
+        {
+          "name": "Search SCN-W0-NS (Week0 not submitted)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?search=NotSubmitted",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [{ "key": "search", "value": "NotSubmitted" }]
+            }
+          }
+        },
+        {
+          "name": "Search SCN-START (pending start)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?search=Start&sessionStatus=pending",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [
+                { "key": "search", "value": "Start" },
+                { "key": "sessionStatus", "value": "pending" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search SCN-RESUME",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?search=Resume",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [{ "key": "search", "value": "Resume" }]
+            }
+          }
+        },
+        {
+          "name": "Search SCN-DONE + completed",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?search=Done&sessionStatus=completed",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [
+                { "key": "search", "value": "Done" },
+                { "key": "sessionStatus", "value": "completed" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search weekly pending Week2",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{trialApiUrl}}/patients?search=Week2&weekly=Weekly%20Pending",
+              "host": ["{{trialApiUrl}}"],
+              "path": ["patients"],
+              "query": [
+                { "key": "search", "value": "Week2" },
+                { "key": "weekly", "value": "Weekly Pending" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
