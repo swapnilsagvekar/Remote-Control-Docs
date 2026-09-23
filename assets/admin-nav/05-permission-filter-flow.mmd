@@ -1,0 +1,10 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","fontFamily":"Inter, Arial, sans-serif"}}}%%
+flowchart TD
+  LOGIN["OTP login"] --> ME["me.permissions"]
+  CATALOG["adminNavModules catalog"] --> FILTER
+  ME --> FILTER["Filter: permissions key.view === true"]
+  FILTER --> MIXED["Mixed sidebar sections PRODUCT · TRIAL · ADMIN"]
+  MIXED --> INAPP["In-app link same panel"]
+  MIXED --> EXT["External link other panel baseUrl + path"]
+  INAPP --> GUARD["Route guard + API PermissionsGuard"]
+  EXT --> GUARD

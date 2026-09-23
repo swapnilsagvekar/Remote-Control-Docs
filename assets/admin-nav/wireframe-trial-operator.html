@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Unified sidebar — Trial Operator role</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Inter, system-ui, sans-serif; background: #f0f2f5; padding: 24px; }
+    .frame { display: flex; width: 720px; height: 520px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+    .sidebar { width: 220px; background: #0f1923; color: #f1f1f1; padding: 16px 0; font-size: 13px; }
+    .logo { padding: 0 16px 20px; font-weight: 700; color: #13aaaf; font-size: 14px; }
+    .section-label { padding: 8px 16px 4px; font-size: 10px; font-weight: 600; letter-spacing: .12em; color: #4b5a6b; text-transform: uppercase; }
+    .item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: #80858f; margin: 2px 8px; border-radius: 8px; }
+    .item.active { background: rgba(19,170,175,.15); color: #7bfaeb; border-left: 3px solid #13aaaf; margin-left: 8px; padding-left: 13px; }
+    .icon { width: 16px; height: 16px; border-radius: 4px; background: #1b2b3c; }
+    .main { flex: 1; background: #fff; padding: 24px; }
+    .main h2 { font-size: 18px; color: #101820; }
+    .main p { font-size: 13px; color: #546e7a; margin-top: 8px; }
+    .note { margin-top: 16px; padding: 12px; background: #fff8e6; border: 1px solid #ffe082; border-radius: 8px; font-size: 12px; color: #5d4037; }
+  </style>
+</head>
+<body>
+  <div class="frame" id="capture">
+    <aside class="sidebar">
+      <div class="logo">TRIAL ADMIN</div>
+      <div class="item"><span class="icon"></span> Dashboard</div>
+      <div class="section-label">Trial only</div>
+      <div class="item"><span class="icon"></span> Configurations</div>
+      <div class="item active"><span class="icon"></span> Patients (Trial)</div>
+      <div class="item"><span class="icon"></span> Sessions (Trial)</div>
+      <div class="item"><span class="icon"></span> Session Statistics</div>
+    </aside>
+    <main class="main">
+      <h2>Trial Operator</h2>
+      <p>Sidebar filtered by role matrix — no Product or Administration sections.</p>
+      <div class="note">Sections with zero visible items are hidden entirely.</div>
+    </main>
+  </div>
+</body>
+</html>

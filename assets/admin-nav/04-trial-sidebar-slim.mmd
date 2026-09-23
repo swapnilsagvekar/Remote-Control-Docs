@@ -1,0 +1,17 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","fontFamily":"Inter, Arial, sans-serif"}}}%%
+flowchart TB
+  subgraph BEFORE["Trial Admin — before"]
+    B1["Dashboard"]
+    B2["Trials · Institutions · Configurations"]
+    B3["Patients · Sessions"]
+    B4["Statistics"]
+    B5["Music"]
+  end
+  subgraph AFTER["Trial Admin — after (nav only)"]
+    A1["Dashboard"]
+    A2["Trials · Configurations"]
+    A3["Patients · Sessions"]
+    A4["Statistics"]
+    A5["Institutions + Music → Product Admin"]
+  end
+  BEFORE -->|remove duplicate modules| AFTER

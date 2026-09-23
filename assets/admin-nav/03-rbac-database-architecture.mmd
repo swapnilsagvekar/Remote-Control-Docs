@@ -1,0 +1,20 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","fontFamily":"Inter, Arial, sans-serif"}}}%%
+flowchart LR
+  subgraph BE["Skitii Backend — MongoDB"]
+    USERS["users"]
+    ROLES["adminRoles"]
+    PERM["adminRolePermissions"]
+    NAV["adminNavModules"]
+    AUDIT["auditLogs"]
+  end
+  subgraph APPS["Two repos — same APIs"]
+    PA["Product Admin"]
+    TA["Trial Admin"]
+  end
+  USERS --> ROLES
+  ROLES --> PERM
+  NAV --> PERM
+  BE -->|me + myNavigation| PA
+  BE -->|me + myNavigation| TA
+  BE -->|PermissionsGuard| BE
+  USERS -.->|writes| AUDIT

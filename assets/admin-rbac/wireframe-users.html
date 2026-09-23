@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Users — list</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Inter, system-ui, sans-serif; background: #f0f2f5; padding: 24px; }
+    .frame { display: flex; width: 920px; height: 560px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+    .sidebar { width: 200px; background: #0f1923; color: #f1f1f1; padding: 16px 0; font-size: 12px; }
+    .logo { padding: 0 14px 18px; font-weight: 700; color: #13aaaf; font-size: 14px; }
+    .item { padding: 9px 14px; color: #80858f; margin: 2px 6px; border-radius: 8px; }
+    .item.active { background: rgba(19,170,175,.15); color: #7bfaeb; }
+    .sec { padding: 10px 14px 4px; font-size: 9px; font-weight: 600; letter-spacing: .1em; color: #4b5a6b; text-transform: uppercase; }
+    .main { flex: 1; background: #fff; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+    .top { display: flex; justify-content: space-between; align-items: center; }
+    h2 { font-size: 18px; color: #101820; }
+    .btn { background: #1ba4a2; color: #fff; border: none; border-radius: 999px; padding: 8px 16px; font-size: 12px; font-weight: 600; }
+    .filters { display: flex; gap: 8px; }
+    .chip, .search { border: 1px solid #cfd8dc; border-radius: 8px; padding: 7px 12px; font-size: 12px; color: #546e7a; background: #f5f5f5; }
+    .search { flex: 1; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; color: #546e7a; font-weight: 600; padding: 8px 6px; border-bottom: 1px solid #eceff1; }
+    td { padding: 10px 6px; border-bottom: 1px solid #f0f2f5; color: #101820; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600; }
+    .ok { background: #e6f7f7; color: #1ba4a2; }
+    .warn { background: #fff3e0; color: #ef6c00; }
+    .muted { color: #90a4ae; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="frame" id="capture">
+    <aside class="sidebar">
+      <div class="logo">SKITII ADMIN</div>
+      <div class="item">Dashboard</div>
+      <div class="sec">Administration</div>
+      <div class="item active">Users</div>
+      <div class="item">Roles &amp; Permissions</div>
+      <div class="item">Modules</div>
+      <div class="item">Module Actions</div>
+      <div class="item">Audit History</div>
+    </aside>
+    <main class="main">
+      <div class="top">
+        <h2>Users</h2>
+        <button class="btn">+ Add user</button>
+      </div>
+      <div class="filters">
+        <div class="search">Search email…</div>
+        <div class="chip">Type: All ▾</div>
+        <div class="chip">Status: Approved ▾</div>
+        <div class="chip">Role: Any ▾</div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Email</th><th>Type</th><th>Roles</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>swapnil@skitii.com<br><span class="muted">Internal</span></td>
+            <td>internal</td>
+            <td><span class="badge ok">Super Admin</span></td>
+            <td><span class="badge ok">APPROVED</span></td>
+            <td class="muted">Edit</td>
+          </tr>
+          <tr>
+            <td>ops@skitii.com<br><span class="muted">Internal</span></td>
+            <td>internal</td>
+            <td><span class="badge ok">Trial Operator</span></td>
+            <td><span class="badge ok">APPROVED</span></td>
+            <td class="muted">Edit</td>
+          </tr>
+          <tr>
+            <td>viewer@yenepoya.edu<br><span class="muted">Institution</span></td>
+            <td>institution</td>
+            <td><span class="badge ok">Patient Viewer</span></td>
+            <td><span class="badge ok">APPROVED</span></td>
+            <td class="muted">Edit</td>
+          </tr>
+          <tr>
+            <td>coord@yenepoya.edu<br><span class="muted">Institution</span></td>
+            <td>institution</td>
+            <td><span class="badge ok">Patient Manager</span></td>
+            <td><span class="badge ok">APPROVED</span></td>
+            <td class="muted">Edit</td>
+          </tr>
+          <tr>
+            <td>old@clinic.com<br><span class="muted">Institution</span></td>
+            <td>institution</td>
+            <td><span class="muted">—</span></td>
+            <td><span class="badge warn">BLOCKED</span></td>
+            <td class="muted">Edit</td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
+  </div>
+</body>
+</html>

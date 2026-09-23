@@ -1,0 +1,8 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","fontFamily":"Inter, Arial, sans-serif"}}}%%
+flowchart TD
+  A[1. Create or edit Module<br/>e.g. trial.patients] --> B[2. Define Actions for module<br/>view · create · view_weekly_form]
+  B --> C[3. Create Role<br/>e.g. Patient Viewer]
+  C --> D[4. Tick permissions on matrix<br/>Patient Viewer: patients.view only]
+  D --> E[5. Assign role to user]
+  E --> F[6. User logs in · me loads]
+  F --> G[Sidebar shows Patients<br/>Weekly form button hidden]

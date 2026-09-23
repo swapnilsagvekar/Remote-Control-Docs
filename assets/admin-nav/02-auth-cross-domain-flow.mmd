@@ -1,0 +1,16 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","fontFamily":"Inter, Arial, sans-serif"}}}%%
+sequenceDiagram
+  participant U as User browser
+  participant T as Trial Admin URL
+  participant P as Product Admin login
+  participant B as Skitii Backend
+  U->>T: Open trial.admin…/patients
+  T->>T: No session cookie
+  T->>P: Redirect login?returnTo=trial…/patients
+  U->>P: Enter email + OTP
+  P->>B: verifyOtp
+  B-->>P: JWT + set cookie on .admin.skitii.com
+  P->>T: Redirect returnTo
+  T->>B: me + myNavigation panel=trial
+  B-->>T: permissions + mixed nav
+  T-->>U: Trial Patients page + unified sidebar

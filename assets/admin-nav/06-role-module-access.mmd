@@ -1,0 +1,19 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","fontFamily":"Inter, Arial, sans-serif"}}}%%
+flowchart TB
+  U["User logs in OTP"]
+  U --> R["Assigned roleIds on user"]
+  R --> M1["Role A permissions"]
+  R --> M2["Role B permissions"]
+  M1 --> UNION["Union permissions per moduleKey"]
+  M2 --> UNION
+  UNION --> V{"module.view?"}
+  V -->|yes| NAV["Sidebar item + list API"]
+  V -->|no| DENY["Hidden + FORBIDDEN"]
+  UNION --> C{"module.create / edit / delete?"}
+  C -->|yes| BTN["Buttons + mutations"]
+  C -->|no| RO["Read-only or blocked"]
+  subgraph EX["Example — institution user"]
+    EP["trial.patients.view → Patient list"]
+    ES["trial.sessions.view → Session list"]
+  end
+  NAV --> EX

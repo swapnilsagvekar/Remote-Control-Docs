@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Module Actions</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Inter, system-ui, sans-serif; background: #f0f2f5; padding: 24px; }
+    .frame { display: flex; width: 920px; height: 560px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+    .sidebar { width: 200px; background: #0f1923; color: #f1f1f1; padding: 16px 0; font-size: 12px; }
+    .logo { padding: 0 14px 18px; font-weight: 700; color: #13aaaf; font-size: 14px; }
+    .item { padding: 9px 14px; color: #80858f; margin: 2px 6px; border-radius: 8px; }
+    .item.active { background: rgba(19,170,175,.15); color: #7bfaeb; }
+    .sec { padding: 10px 14px 4px; font-size: 9px; font-weight: 600; letter-spacing: .1em; color: #4b5a6b; text-transform: uppercase; }
+    .main { flex: 1; background: #fff; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+    .top { display: flex; justify-content: space-between; align-items: center; }
+    h2 { font-size: 18px; color: #101820; }
+    .sub { font-size: 12px; color: #546e7a; }
+    .btn { background: #1ba4a2; color: #fff; border: none; border-radius: 999px; padding: 8px 16px; font-size: 12px; font-weight: 600; }
+    .select { border: 1px solid #cfd8dc; border-radius: 8px; padding: 7px 12px; font-size: 12px; background: #f5f5f5; color: #101820; width: fit-content; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; color: #546e7a; font-weight: 600; padding: 8px 6px; border-bottom: 1px solid #eceff1; }
+    td { padding: 10px 6px; border-bottom: 1px solid #f0f2f5; color: #101820; }
+    .mono { font-family: ui-monospace, monospace; font-size: 11px; color: #1a237e; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600; background: #e6f7f7; color: #1ba4a2; }
+    .yes { color: #1ba4a2; font-weight: 600; }
+    .no { color: #90a4ae; }
+    .muted { color: #90a4ae; font-size: 11px; }
+    .callout { background: #e6f7f7; border-radius: 8px; padding: 10px 12px; font-size: 11px; color: #0d7371; }
+  </style>
+</head>
+<body>
+  <div class="frame" id="capture">
+    <aside class="sidebar">
+      <div class="logo">SKITII ADMIN</div>
+      <div class="item">Dashboard</div>
+      <div class="sec">Administration</div>
+      <div class="item">Users</div>
+      <div class="item">Roles &amp; Permissions</div>
+      <div class="item">Modules</div>
+      <div class="item active">Module Actions</div>
+      <div class="item">Audit History</div>
+    </aside>
+    <main class="main">
+      <div class="top">
+        <div>
+          <h2>Module Actions</h2>
+          <div class="sub">Define actions per module — appears as columns in Roles matrix</div>
+        </div>
+        <button class="btn">+ Add action</button>
+      </div>
+      <div class="select">Module: trial.patients · Patients (Trial) ▾</div>
+      <div class="callout">Sidebar shows this module when any action with <strong>controlsSidebar</strong> is granted (usually <code>view</code>).</div>
+      <table>
+        <thead>
+          <tr><th>Action key</th><th>Label</th><th>Sidebar?</th><th>Order</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mono">view</td>
+            <td>View list &amp; detail</td>
+            <td class="yes">Yes</td>
+            <td>10</td>
+            <td><span class="badge">Active</span></td>
+            <td class="muted">Edit</td>
+          </tr>
+          <tr>
+            <td class="mono">create</td>
+            <td>Add patient</td>
+            <td class="no">No</td>
+            <td>20</td>
+            <td><span class="badge">Active</span></td>
+            <td class="muted">Edit</td>
+          </tr>
+          <tr>
+            <td class="mono">edit</td>
+            <td>Edit patient</td>
+            <td class="no">No</td>
+            <td>30</td>
+            <td><span class="badge">Active</span></td>
+            <td class="muted">Edit</td>
+          </tr>
+          <tr>
+            <td class="mono">delete</td>
+            <td>Delete / archive</td>
+            <td class="no">No</td>
+            <td>40</td>
+            <td><span class="badge">Active</span></td>
+            <td class="muted">Edit</td>
+          </tr>
+          <tr>
+            <td class="mono">view_weekly_form</td>
+            <td>View weekly form</td>
+            <td class="no">No</td>
+            <td>50</td>
+            <td><span class="badge">Active</span></td>
+            <td class="muted">Edit</td>
+          </tr>
+          <tr>
+            <td class="mono">edit_weekly_form</td>
+            <td>Edit weekly form</td>
+            <td class="no">No</td>
+            <td>60</td>
+            <td><span class="badge">Active</span></td>
+            <td class="muted">Edit</td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
+  </div>
+</body>
+</html>

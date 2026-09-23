@@ -1,0 +1,30 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","fontFamily":"Inter, Arial, sans-serif"}}}%%
+flowchart LR
+  subgraph Catalog["Super Admin manages"]
+    MOD[adminNavModules<br/>key · label · panel · path]
+    ACT[adminModuleActions<br/>moduleKey · actionKey · label]
+  end
+
+  subgraph Assign["Assign access"]
+    ROLE[adminRoles]
+    PERM[adminRolePermissions<br/>roleId · moduleKey · actionKey]
+    USER[users.roleIds]
+  end
+
+  subgraph Runtime["Apps at runtime"]
+    ME[me.permissions]
+    NAV[myNavigation]
+    UI[Sidebar + buttons]
+    API[PermissionsGuard]
+  end
+
+  MOD --> ACT
+  MOD --> PERM
+  ACT --> PERM
+  ROLE --> PERM
+  USER --> ROLE
+  PERM --> ME
+  MOD --> NAV
+  ME --> NAV
+  ME --> UI
+  ME --> API

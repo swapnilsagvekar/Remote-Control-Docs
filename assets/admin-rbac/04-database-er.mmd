@@ -1,0 +1,60 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","fontFamily":"Inter, Arial, sans-serif"}}}%%
+erDiagram
+  users }o--o{ adminRoles : "roleIds"
+  adminRoles ||--o{ adminRolePermissions : "roleId"
+  adminNavModules ||--o{ adminModuleActions : "moduleKey"
+  adminNavModules ||--o{ adminRolePermissions : "moduleKey"
+  adminModuleActions ||--o{ adminRolePermissions : "actionKey"
+  users ||--o{ auditLogs : "actorUserId"
+
+  users {
+    ObjectId _id PK
+    string email UK
+    ObjectId[] roleIds
+    string userType
+    string status
+  }
+
+  adminRoles {
+    ObjectId _id PK
+    string name
+    string slug UK
+    boolean isSystem
+    boolean isActive
+  }
+
+  adminNavModules {
+    string key PK
+    string label
+    string panel
+    string path
+    string section
+    number sortOrder
+    boolean isActive
+  }
+
+  adminModuleActions {
+    ObjectId _id PK
+    string moduleKey FK
+    string actionKey
+    string label
+    boolean controlsSidebar
+    number sortOrder
+    boolean isActive
+  }
+
+  adminRolePermissions {
+    ObjectId _id PK
+    ObjectId roleId FK
+    string moduleKey FK
+    string actionKey
+    boolean granted
+  }
+
+  auditLogs {
+    ObjectId _id PK
+    ObjectId actorUserId FK
+    string action
+    string moduleKey
+    date createdAt
+  }

@@ -1,0 +1,19 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","fontFamily":"Inter, Arial, sans-serif"}}}%%
+flowchart TB
+  subgraph Admin["Administration · Product Admin"]
+    U[Users]
+    R[Roles and Permissions]
+    M[Modules Catalog]
+    A[Module Actions]
+    AU[Audit History]
+  end
+
+  U -->|assign roleIds| R
+  R -->|matrix ticks| M
+  R -->|matrix ticks| A
+  M -->|defines rows| R
+  A -->|defines columns per module| R
+  U -.->|writes| AU
+  R -.->|writes| AU
+  M -.->|writes| AU
+  A -.->|writes| AU

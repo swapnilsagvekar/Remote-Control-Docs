@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Create role — preset / clone</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Inter, system-ui, sans-serif; background: #f0f2f5; padding: 24px; }
+    .frame { width: 640px; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+    .hdr { padding: 16px 20px; border-bottom: 1px solid #eceff1; }
+    h2 { font-size: 17px; color: #101820; }
+    .sub { font-size: 12px; color: #546e7a; margin-top: 2px; }
+    .body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+    .field label { display: block; font-size: 11px; color: #546e7a; margin-bottom: 4px; font-weight: 600; }
+    .field .val { border: 1px solid #cfd8dc; border-radius: 8px; padding: 9px 12px; font-size: 13px; background: #fafafa; color: #101820; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .src-label { font-size: 11px; color: #546e7a; font-weight: 600; margin-bottom: 8px; }
+    .opts { display: flex; flex-direction: column; gap: 8px; }
+    .opt { border: 1px solid #cfd8dc; border-radius: 10px; padding: 10px 12px; font-size: 12px; color: #263238; display: flex; gap: 10px; align-items: flex-start; }
+    .opt.on { border-color: #1ba4a2; background: #e6f7f7; }
+    .radio { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #90a4ae; margin-top: 1px; flex-shrink: 0; }
+    .opt.on .radio { border-color: #1ba4a2; box-shadow: inset 0 0 0 3px #1ba4a2; }
+    .opt strong { display: block; margin-bottom: 2px; }
+    .opt span { color: #546e7a; font-size: 11px; }
+    .select { border: 1px solid #1ba4a2; border-radius: 8px; padding: 8px 10px; font-size: 12px; background: #fff; margin-top: 8px; color: #101820; }
+    .foot { display: flex; justify-content: flex-end; gap: 8px; padding: 0 20px 16px; }
+    .btn { background: #1ba4a2; color: #fff; border: none; border-radius: 999px; padding: 8px 16px; font-size: 12px; font-weight: 600; }
+    .btn.ghost { background: #fff; color: #546e7a; border: 1px solid #cfd8dc; }
+  </style>
+</head>
+<body>
+  <div class="frame" id="capture">
+    <div class="hdr">
+      <h2>Create role</h2>
+      <div class="sub">Permission source required — Empty, Clone, or Preset</div>
+    </div>
+    <div class="body">
+      <div class="grid">
+        <div class="field">
+          <label>Name</label>
+          <div class="val">Regional Trial Auditor</div>
+        </div>
+        <div class="field">
+          <label>Slug</label>
+          <div class="val">regional-trial-auditor</div>
+        </div>
+      </div>
+      <div>
+        <div class="src-label">Permission source</div>
+        <div class="opts">
+          <div class="opt">
+            <div class="radio"></div>
+            <div><strong>Empty</strong><span>Start with no grants — tick the matrix manually</span></div>
+          </div>
+          <div class="opt">
+            <div class="radio"></div>
+            <div><strong>Clone role</strong><span>Copy grants from an existing role, then edit</span></div>
+          </div>
+          <div class="opt on">
+            <div class="radio"></div>
+            <div>
+              <strong>Use preset</strong>
+              <span>Start from a seeded template</span>
+              <div class="select">Preset: Read-only Trial ▾</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <button class="btn ghost">Cancel</button>
+      <button class="btn">Continue to matrix →</button>
+    </div>
+  </div>
+</body>
+</html>

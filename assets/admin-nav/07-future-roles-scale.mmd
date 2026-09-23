@@ -1,0 +1,15 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","fontFamily":"Inter, Arial, sans-serif"}}}%%
+flowchart LR
+  subgraph TODAY["Today"]
+    T1["Hardcoded ADMIN gate"]
+  end
+  subgraph FUTURE["Target — scales with new roles"]
+    N1["Seed or create adminRole"]
+    N2["Set module matrix in UI"]
+    N3["Assign role to user"]
+    N4["me.permissions updates"]
+    N5["Sidebar + APIs follow matrix"]
+  end
+  N1 --> N2 --> N3 --> N4 --> N5
+  NEW["New module later"] --> NAVMOD["Add adminNavModules row"]
+  NAVMOD --> N2

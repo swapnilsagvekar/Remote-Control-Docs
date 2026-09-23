@@ -1,0 +1,56 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","fontFamily":"Inter, Arial, sans-serif"}}}%%
+erDiagram
+  users ||--o{ institutions : "userId 1:1 optional"
+  users }o--o{ adminRoles : "roleIds"
+  adminRoles ||--|{ adminRolePermissions : "roleId"
+  adminNavModules ||--o{ adminRolePermissions : "moduleKey"
+  users ||--o{ auditLogs : "actorUserId"
+
+  users {
+    ObjectId _id PK
+    string email UK
+    string[] roles "legacy enum"
+    ObjectId[] roleIds "NEW assignable roles"
+    string userType "NEW internal | institution | clinical"
+    string status
+    boolean isVerified
+  }
+
+  adminRoles {
+    ObjectId _id PK
+    string name UK
+    string slug UK
+    boolean isSystem
+    boolean isActive
+  }
+
+  adminRolePermissions {
+    ObjectId _id PK
+    ObjectId roleId FK
+    string moduleKey FK
+    boolean view
+    boolean create
+    boolean edit
+    boolean delete
+  }
+
+  adminNavModules {
+    string key PK
+    string label
+    string panel "product | trial"
+    string path
+    string section
+    number sortOrder
+    string icon
+    boolean isActive
+  }
+
+  auditLogs {
+    ObjectId _id PK
+    ObjectId actorUserId FK
+    string action
+    string moduleKey
+    object before
+    object after
+    date createdAt
+  }

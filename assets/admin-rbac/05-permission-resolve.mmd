@@ -1,0 +1,12 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","fontFamily":"Inter, Arial, sans-serif"}}}%%
+flowchart TD
+  JWT[JWT sub] --> LOAD[Load user + roleIds]
+  LOAD --> SA{Super Admin?}
+  SA -->|yes| ALL[All modules · all actions = true]
+  SA -->|no| Q[Query adminRolePermissions<br/>where roleId in roleIds]
+  Q --> MERGE[Group by moduleKey · actionKey<br/>OR across roles]
+  MERGE --> ME["me.permissions map"]
+  ALL --> ME
+  ME --> SIDE[Show nav if any action<br/>with controlsSidebar]
+  ME --> BTN[Show button if action granted]
+  ME --> GARD[API RequirePermission]

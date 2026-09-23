@@ -1,0 +1,25 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","secondaryColor":"#ECEFF1","tertiaryColor":"#F5F5F5","fontFamily":"Inter, Arial, sans-serif"}}}%%
+flowchart LR
+  subgraph SETUP["Setup once"]
+    TR["Trials<br/>define protocol<br/>shifts · weekly steps"]
+    CF["Configurations<br/>map institute → trial<br/>show Weekly PIN"]
+    IN["Institutions<br/>listing only"]
+  end
+  subgraph SCOPE["Global scope bar"]
+    SC["Institution + Trial"]
+  end
+  subgraph RUN["Daily operations"]
+    PT["Patients"]
+    SE["Sessions"]
+  end
+  subgraph ANALYTICS["Analytics"]
+    ST["Session Statistics"]
+    WK["Weekly Statistics"]
+  end
+  TR --> CF
+  IN --> CF
+  CF --> SC
+  SC --> PT
+  SC --> SE
+  SC --> ST
+  SC --> WK

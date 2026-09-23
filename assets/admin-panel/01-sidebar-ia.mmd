@@ -1,0 +1,23 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","secondaryColor":"#ECEFF1","tertiaryColor":"#F5F5F5","fontFamily":"Inter, Arial, sans-serif"}}}%%
+flowchart TB
+  subgraph SIDEBAR["Skitii Trial Admin — Sidebar"]
+    D["Dashboard"]
+    subgraph SETUP["Setup"]
+      T["Trials"]
+      I["Institutions"]
+      C["Configurations"]
+    end
+    subgraph OPS["Operations"]
+      P["Patients"]
+      S["Sessions"]
+    end
+    subgraph ANALYTICS["Analytics"]
+      SS["Session Statistics"]
+      WS["Weekly Statistics"]
+    end
+    M["Music"]
+  end
+  D --> SETUP
+  SETUP --> OPS
+  OPS --> ANALYTICS
+  ANALYTICS --> M

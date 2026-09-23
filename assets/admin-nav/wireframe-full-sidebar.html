@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Unified sidebar — full catalog</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Inter, system-ui, sans-serif; background: #f0f2f5; padding: 24px; }
+    .frame { display: flex; width: 720px; height: 640px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+    .sidebar { width: 240px; background: #0f1923; color: #f1f1f1; display: flex; flex-direction: column; padding: 16px 0; font-size: 13px; }
+    .logo { padding: 0 16px 20px; font-weight: 700; color: #13aaaf; font-size: 15px; letter-spacing: .04em; }
+    .section { margin-top: 8px; }
+    .section-label { padding: 8px 16px 4px; font-size: 10px; font-weight: 600; letter-spacing: .12em; color: #4b5a6b; text-transform: uppercase; }
+    .item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: #80858f; margin: 2px 8px; border-radius: 8px; }
+    .item.active { background: rgba(19,170,175,.15); color: #7bfaeb; border-left: 3px solid #13aaaf; margin-left: 8px; padding-left: 13px; }
+    .item.ext::after { content: "↗"; margin-left: auto; font-size: 11px; opacity: .7; }
+    .icon { width: 16px; height: 16px; border-radius: 4px; background: #1b2b3c; flex-shrink: 0; }
+    .main { flex: 1; background: #fff; padding: 24px; }
+    .main h2 { font-size: 18px; color: #101820; margin-bottom: 8px; }
+    .main p { font-size: 13px; color: #546e7a; }
+    .badge { display: inline-block; margin-top: 16px; padding: 4px 10px; background: #e6f7f7; color: #1ba4a2; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="frame" id="capture">
+    <aside class="sidebar">
+      <div class="logo">SKITII ADMIN</div>
+      <div class="item"><span class="icon"></span> Dashboard</div>
+      <div class="section">
+        <div class="section-label">Product</div>
+        <div class="item"><span class="icon"></span> Institutions</div>
+        <div class="item"><span class="icon"></span> Physical Devices</div>
+        <div class="item"><span class="icon"></span> Patients (Product)</div>
+        <div class="item"><span class="icon"></span> Sessions (Product)</div>
+        <div class="item"><span class="icon"></span> Music Categories</div>
+        <div class="item"><span class="icon"></span> Music Library</div>
+        <div class="item"><span class="icon"></span> Inquiries</div>
+      </div>
+      <div class="section">
+        <div class="section-label">Trial</div>
+        <div class="item ext"><span class="icon"></span> Trials</div>
+        <div class="item ext"><span class="icon"></span> Configurations</div>
+        <div class="item ext"><span class="icon"></span> Patients (Trial)</div>
+        <div class="item ext"><span class="icon"></span> Sessions (Trial)</div>
+        <div class="item ext"><span class="icon"></span> Session Statistics</div>
+        <div class="item ext"><span class="icon"></span> Weekly Statistics</div>
+      </div>
+      <div class="section">
+        <div class="section-label">Administration</div>
+        <div class="item"><span class="icon"></span> Users</div>
+        <div class="item"><span class="icon"></span> Roles &amp; Permissions</div>
+        <div class="item"><span class="icon"></span> Audit History</div>
+      </div>
+    </aside>
+    <main class="main">
+      <h2>Product Admin — Institutions</h2>
+      <p>Unified sidebar shown while on Product domain. Trial links open trial.admin… in the same browser session.</p>
+      <span class="badge">Super Admin — all sections visible</span>
+    </main>
+  </div>
+</body>
+</html>

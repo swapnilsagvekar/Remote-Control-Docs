@@ -1,0 +1,30 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#E6F7F7","primaryTextColor":"#101820","primaryBorderColor":"#1BA4A2","lineColor":"#546E7A","secondaryColor":"#ECEFF1","tertiaryColor":"#F5F5F5","fontFamily":"Inter, Arial, sans-serif"}}}%%
+flowchart TB
+  subgraph NAV["Unified sidebar — one catalog, two apps"]
+    D["Dashboard"]
+    subgraph PROD["PRODUCT"]
+      PI["Institutions"]
+      PD["Physical Devices"]
+      PP["Patients (Product)"]
+      PS["Sessions (Product)"]
+      MC["Music Categories"]
+      ML["Music Library"]
+      INQ["Inquiries"]
+    end
+    subgraph TRIAL["TRIAL"]
+      TR["Trials"]
+      TC["Configurations"]
+      TP["Patients (Trial)"]
+      TS["Sessions (Trial)"]
+      TSS["Session Statistics"]
+      TWS["Weekly Statistics"]
+    end
+    subgraph ADMIN["ADMINISTRATION"]
+      U["Users"]
+      R["Roles & Permissions"]
+      A["Audit History"]
+    end
+  end
+  D --> PROD
+  PROD --> TRIAL
+  TRIAL --> ADMIN
