@@ -13,7 +13,12 @@
     { "key": "accessToken", "value": "" },
     { "key": "deviceId", "value": "yenepoya-tablet-1" },
     { "key": "patientId", "value": "" },
-    { "key": "search", "value": "Week0" }
+    { "key": "search", "value": "Week0" },
+    { "key": "since", "value": "" },
+    { "key": "targetDeviceId", "value": "SKT-TARGET-TABLET" },
+    { "key": "institutionId", "value": "" },
+    { "key": "trialId", "value": "skitii-trial-v1" },
+    { "key": "adminAccessToken", "value": "" }
   ],
   "auth": {
     "type": "bearer",
@@ -478,6 +483,580 @@
               ]
             }
           }
+        }
+      ]
+    },
+    {
+      "name": "Offline sync (GraphQL)",
+      "description": "Tablet `syncTablet` mutation. Every tablet request must send `x-device-id` = a device registered and active for the institution in product `physical_devices`; `input.physicalDeviceId` must match the header.\n\nResponse: `applied[]`, `failures[]` (`code`, `message`, `retryable`), legacy `failed`, `patients` (only this tablet's), `removedPatientIds`, `fullSnapshot`, `trialConfigVersion`, `serverNow`. Save `serverNow` and send it as `since` next time.",
+      "item": [
+        {
+          "name": "syncTablet — first pull (full device snapshot)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apollo-require-preflight",
+                "value": "true"
+              },
+              {
+                "key": "x-device-id",
+                "value": "{{deviceId}}"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation($input: JSON!) {\n  syncTablet(input: $input)\n}",
+                "variables": "{\n  \"input\": {\n    \"physicalDeviceId\": \"{{deviceId}}\",\n    \"operations\": []\n  }\n}"
+              }
+            },
+            "url": "{{trialApiUrl}}/graphql",
+            "description": "No `since` → full snapshot of patients assigned to this tablet. Saves `serverNow` to `{{since}}`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('no GraphQL errors', () => pm.expect(j.errors, JSON.stringify(j.errors)).to.be.undefined);",
+                  "const r = j.data && j.data.syncTablet;",
+                  "pm.test('full snapshot', () => pm.expect(r.fullSnapshot).to.eql(true));",
+                  "if (r && r.serverNow) pm.collectionVariables.set('since', r.serverNow);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "syncTablet — incremental pull (since)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apollo-require-preflight",
+                "value": "true"
+              },
+              {
+                "key": "x-device-id",
+                "value": "{{deviceId}}"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation($input: JSON!) {\n  syncTablet(input: $input)\n}",
+                "variables": "{\n  \"input\": {\n    \"physicalDeviceId\": \"{{deviceId}}\",\n    \"since\": \"{{since}}\",\n    \"operations\": []\n  }\n}"
+              }
+            },
+            "url": "{{trialApiUrl}}/graphql",
+            "description": "Only rows changed after `since`, plus `removedPatientIds` for patients transferred away from this tablet since then."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('no GraphQL errors', () => pm.expect(j.errors, JSON.stringify(j.errors)).to.be.undefined);",
+                  "const r = j.data && j.data.syncTablet;",
+                  "pm.test('has removedPatientIds', () => pm.expect(r).to.have.property('removedPatientIds'));",
+                  "if (r && r.serverNow) pm.collectionVariables.set('since', r.serverNow);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "syncTablet — replay an offline createPatient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apollo-require-preflight",
+                "value": "true"
+              },
+              {
+                "key": "x-device-id",
+                "value": "{{deviceId}}"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation($input: JSON!) {\n  syncTablet(input: $input)\n}",
+                "variables": "{\n  \"input\": {\n    \"physicalDeviceId\": \"{{deviceId}}\",\n    \"since\": \"{{since}}\",\n    \"operations\": [\n      {\n        \"type\": \"createPatient\",\n        \"clientMutationId\": \"{{$guid}}\",\n        \"clientOccurredAt\": \"{{$isoTimestamp}}\",\n        \"variables\": {\n          \"input\": {\n            \"firstName\": \"Offline\",\n            \"lastName\": \"Patient\",\n            \"registrationNo\": \"OFF-{{$timestamp}}\",\n            \"age\": 45,\n            \"gender\": \"female\",\n            \"emergencyNumber\": \"9000000000\",\n            \"languagePreference\": \"English\",\n            \"enrollmentDate\": \"2026-10-01\",\n            \"groupType\": \"control\",\n            \"diagnosisStage\": \"Stage 2\",\n            \"treatmentType\": \"Radiotherapy\",\n            \"cancerSite\": \"Oral\",\n            \"ecogScore\": \"1\",\n            \"surgicalType\": \"Pre-Operative\",\n            \"ancovaStaging\": \"Early\",\n            \"_localId\": \"local-{{$timestamp}}\"\n          }\n        }\n      }\n    ]\n  }\n}"
+              }
+            },
+            "url": "{{trialApiUrl}}/graphql",
+            "description": "One outbox operation. `clientOccurredAt` is validated against server time: at most 2 minutes in the future and no older than `OFFLINE_SYNC_MAX_AGE_HOURS` (default 72). Replaying the same `clientMutationId` returns the same record. Operations depending on a failed one come back as `DEPENDENCY_FAILED`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('no GraphQL errors', () => pm.expect(j.errors, JSON.stringify(j.errors)).to.be.undefined);",
+                  "const r = j.data && j.data.syncTablet;",
+                  "pm.test('applied or reported', () => pm.expect(r.applied.length + (r.failures || []).length).to.be.above(0));",
+                  "if (r.applied[0] && r.applied[0].serverId) pm.collectionVariables.set('patientId', r.applied[0].serverId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "syncTablet — unregistered tablet is rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apollo-require-preflight",
+                "value": "true"
+              },
+              {
+                "key": "x-device-id",
+                "value": "SKT-NOT-REGISTERED"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation($input: JSON!) {\n  syncTablet(input: $input)\n}",
+                "variables": "{\n  \"input\": {\n    \"physicalDeviceId\": \"SKT-NOT-REGISTERED\",\n    \"operations\": []\n  }\n}"
+              }
+            },
+            "url": "{{trialApiUrl}}/graphql",
+            "description": "Expects `DEVICE_NOT_REGISTERED` (HTTP 200 with a GraphQL error)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('DEVICE_NOT_REGISTERED', () => pm.expect(j.errors[0].extensions.code).to.eql('DEVICE_NOT_REGISTERED'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Patients — device-scoped (GraphQL)",
+      "description": "Tablet patient APIs only return and accept patients assigned to the `x-device-id` tablet. Registration numbers are unique per tablet.",
+      "item": [
+        {
+          "name": "listPatients — this tablet only",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apollo-require-preflight",
+                "value": "true"
+              },
+              {
+                "key": "x-device-id",
+                "value": "{{deviceId}}"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query($page: Int, $limit: Int, $search: String) {\n  listPatients(page: $page, limit: $limit, search: $search)\n}",
+                "variables": "{\n  \"page\": 1,\n  \"limit\": 20,\n  \"search\": null\n}"
+              }
+            },
+            "url": "{{trialApiUrl}}/graphql",
+            "description": "Every item has `assignedDeviceId` = `{{deviceId}}`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('no GraphQL errors', () => pm.expect(j.errors, JSON.stringify(j.errors)).to.be.undefined);",
+                  "const r = j.data.listPatients;",
+                  "pm.test('only this tablet', () => (r.items || []).forEach(p => pm.expect(p.assignedDeviceId).to.eql(pm.collectionVariables.get('deviceId'))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "createPatient — owned by this tablet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apollo-require-preflight",
+                "value": "true"
+              },
+              {
+                "key": "x-device-id",
+                "value": "{{deviceId}}"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation($input: JSON!) {\n  createPatient(input: $input)\n}",
+                "variables": "{\n  \"input\": {\n    \"firstName\": \"Offline\",\n    \"lastName\": \"Patient\",\n    \"registrationNo\": \"OFF-{{$timestamp}}\",\n    \"age\": 45,\n    \"gender\": \"female\",\n    \"emergencyNumber\": \"9000000000\",\n    \"languagePreference\": \"English\",\n    \"enrollmentDate\": \"2026-10-01\",\n    \"groupType\": \"control\",\n    \"diagnosisStage\": \"Stage 2\",\n    \"treatmentType\": \"Radiotherapy\",\n    \"cancerSite\": \"Oral\",\n    \"ecogScore\": \"1\",\n    \"surgicalType\": \"Pre-Operative\",\n    \"ancovaStaging\": \"Early\"\n  }\n}"
+              }
+            },
+            "url": "{{trialApiUrl}}/graphql",
+            "description": "`assignedDeviceId` is taken from the verified `x-device-id`; any value in the body is ignored. Saves `_id` to `{{patientId}}`. A duplicate registration number on the same tablet returns `DUPLICATE_REGISTRATION_NO`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('no GraphQL errors', () => pm.expect(j.errors, JSON.stringify(j.errors)).to.be.undefined);",
+                  "const p = j.data.createPatient;",
+                  "pm.test('owned by this tablet', () => pm.expect(p.assignedDeviceId).to.eql(pm.collectionVariables.get('deviceId')));",
+                  "pm.collectionVariables.set('patientId', p._id);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Transfers — tablet (GraphQL)",
+      "description": "Online only. The patient must belong to the calling tablet and have no ACTIVE session. The app syncs the patient's pending outbox first and refuses to transfer while anything is pending or failed.",
+      "item": [
+        {
+          "name": "transferPatient — to another tablet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apollo-require-preflight",
+                "value": "true"
+              },
+              {
+                "key": "x-device-id",
+                "value": "{{deviceId}}"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation($input: JSON!) {\n  transferPatient(input: $input)\n}",
+                "variables": "{\n  \"input\": {\n    \"patientId\": \"{{patientId}}\",\n    \"toDeviceId\": \"{{targetDeviceId}}\",\n    \"reason\": \"Tablet replaced\"\n  }\n}"
+              }
+            },
+            "url": "{{trialApiUrl}}/graphql",
+            "description": "Errors: `INVALID_TARGET_DEVICE` (not registered / inactive / same tablet), `ACTIVE_SESSION`, `DUPLICATE_REGISTRATION_NO`, `NOT_FOUND`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('no GraphQL errors', () => pm.expect(j.errors, JSON.stringify(j.errors)).to.be.undefined);",
+                  "const r = j.data.transferPatient;",
+                  "pm.test('assigned to target', () => pm.expect(r.patient.assignedDeviceId).to.eql(pm.collectionVariables.get('targetDeviceId')));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin — devices & transfers (GraphQL)",
+      "description": "Trial Admin panel APIs. Uses `{{adminAccessToken}}` (admin/SUPER_ADMIN JWT from the product backend). No `x-device-id` header.",
+      "item": [
+        {
+          "name": "adminDevices",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apollo-require-preflight",
+                "value": "true"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query($institutionId: String, $trialId: String) {\n  adminDevices(institutionId: $institutionId, trialId: $trialId)\n}",
+                "variables": "{\n  \"institutionId\": \"{{institutionId}}\",\n  \"trialId\": \"{{trialId}}\"\n}"
+              }
+            },
+            "url": "{{trialApiUrl}}/graphql",
+            "description": "Registered tablets for the institution with `assignedPatientCount` and `lastSeenAt`. Device ids that still own Trial data but are not registered come back with `registered: false`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('no GraphQL errors', () => pm.expect(j.errors, JSON.stringify(j.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "adminPatients — filter by tablet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apollo-require-preflight",
+                "value": "true"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query($institutionId: String, $trialId: String, $assignedDeviceId: String, $page: Int, $limit: Int) {\n  adminPatients(institutionId: $institutionId, trialId: $trialId, assignedDeviceId: $assignedDeviceId, page: $page, limit: $limit)\n}",
+                "variables": "{\n  \"institutionId\": \"{{institutionId}}\",\n  \"trialId\": \"{{trialId}}\",\n  \"assignedDeviceId\": \"{{deviceId}}\",\n  \"page\": 1,\n  \"limit\": 20\n}"
+              }
+            },
+            "url": "{{trialApiUrl}}/graphql",
+            "description": "Pass a device id, or `unassigned` for patients with no tablet.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('no GraphQL errors', () => pm.expect(j.errors, JSON.stringify(j.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "adminTransferPatient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apollo-require-preflight",
+                "value": "true"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation($patientId: String!, $toDeviceId: String!, $institutionId: String, $trialId: String, $reason: String) {\n  adminTransferPatient(patientId: $patientId, toDeviceId: $toDeviceId, institutionId: $institutionId, trialId: $trialId, reason: $reason)\n}",
+                "variables": "{\n  \"patientId\": \"{{patientId}}\",\n  \"toDeviceId\": \"{{targetDeviceId}}\",\n  \"institutionId\": \"{{institutionId}}\",\n  \"trialId\": \"{{trialId}}\",\n  \"reason\": \"Moved by admin\"\n}"
+              }
+            },
+            "url": "{{trialApiUrl}}/graphql",
+            "description": "Needs `trial.patients:transfer`. Same errors as the tablet mutation.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('no GraphQL errors', () => pm.expect(j.errors, JSON.stringify(j.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "adminPatientTransfers — one patient's history",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apollo-require-preflight",
+                "value": "true"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query($patientId: String!, $institutionId: String, $trialId: String) {\n  adminPatientTransfers(patientId: $patientId, institutionId: $institutionId, trialId: $trialId)\n}",
+                "variables": "{\n  \"patientId\": \"{{patientId}}\",\n  \"institutionId\": \"{{institutionId}}\",\n  \"trialId\": \"{{trialId}}\"\n}"
+              }
+            },
+            "url": "{{trialApiUrl}}/graphql",
+            "description": "Newest first: `fromDeviceId`, `toDeviceId`, `transferredBy { kind, id, email }`, `transferredAt`, `reason`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('no GraphQL errors', () => pm.expect(j.errors, JSON.stringify(j.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "adminTransfers — institution log",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apollo-require-preflight",
+                "value": "true"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query($institutionId: String, $trialId: String, $deviceId: String, $page: Int, $limit: Int) {\n  adminTransfers(institutionId: $institutionId, trialId: $trialId, deviceId: $deviceId, page: $page, limit: $limit)\n}",
+                "variables": "{\n  \"institutionId\": \"{{institutionId}}\",\n  \"trialId\": \"{{trialId}}\",\n  \"deviceId\": null,\n  \"page\": 1,\n  \"limit\": 20\n}"
+              }
+            },
+            "url": "{{trialApiUrl}}/graphql",
+            "description": "Paginated. `deviceId` matches either side of the transfer.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('no GraphQL errors', () => pm.expect(j.errors, JSON.stringify(j.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

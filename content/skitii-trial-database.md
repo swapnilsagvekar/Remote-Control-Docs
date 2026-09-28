@@ -1,6 +1,6 @@
 # Skitii Trial — Database Design  
-**Version:** 1.0  
-**Date:** July 2026  
+**Version:** 1.1  
+**Date:** September 2026  
 **Author:** Swapnil Sagvekar  
 **Customer:** Yenepoya Hospital  
 **Scope:** Existing Skitii Product DB changes + New Trial DB (MongoDB)
@@ -67,7 +67,7 @@ These are the **only** changes required in the existing backend databases.
 
 | Area | Decision |
 |------|----------|
-| Device allowlist (`physical_devices`) | Reuse existing product logic — **no Trial DB copy** |
+| Device allowlist (`physical_devices`) | Reuse existing product logic — **no Trial DB copy**. Since v1.1 the Trial Backend **requires** every tablet call to send `x-device-id` matching an active `physical_devices` row for the caller's institution (`DEVICE_NOT_REGISTERED` otherwise) |
 | Auth / OTP / JWT | Reuse existing Auth Backend — **no Trial DB copy** |
 | Product `patients` / `sessions` | **Not used** for trial — trial has its own collections |
 
@@ -87,6 +87,7 @@ These are the **only** changes required in the existing backend databases.
 | 8 | `weeklyForms` | Weekly assessment for even weeks (dynamic steps + optional 5-min HRV) |
 | 9 | `weeklyFormPins` | Hashed weekly form PIN + lockout state |
 | 10 | `missedSessionLogs` | Daily missed-session snapshot for email reports |
+| 11 | `patient_transfers` | Append-only log of patients moved between tablets |
 
 > **`trialStatistics`:** Not a v1 collection. KPIs are **compute-on-read** from `sessions` / `weeklyForms` / `patients`. Add a cache collection later only if queries are slow.
 
@@ -207,10 +208,16 @@ Links an institution (from Auth DB) to an active trial.
 | `week0Submitted` | Boolean | Yes | Default `false`. Lock for edits when `true` |
 | `isEditable` | Boolean | Yes | `true` until Week 0 submitted; then view-only (incl. enrollment date) |
 | `status` | String enum | Yes | `active` \| `completed` \| `withdrawn` |
+| `assignedDeviceId` | String | No | Physical device id (`physical_devices.physicalDeviceId`) of the tablet that owns the patient. Set from the verified `x-device-id` when a tablet creates the patient; `null` for patients created in the admin panel until an admin assigns them. Changed only by a transfer (see `patient_transfers`) |
+| `clientMutationId` | String | No | Tablet outbox id used to make offline replays idempotent |
 | `createdAt` / `updatedAt` | Date | Yes | |
 
+**Device ownership:** tablet APIs (`listPatients`, `getPatient`, sessions, weekly forms, `syncTablet` pull) only see patients whose `assignedDeviceId` equals the calling tablet. Admin queries stay institution-wide and can filter by `assignedDeviceId` (`"unassigned"` for `null`).
+
 **Indexes:**
-- Unique sparse: `{ institutionId: 1, trialId: 1, registrationNo: 1 }` — only when `registrationNo` is set (same pattern as product)
+- Partial unique: `{ institutionId: 1, trialId: 1, assignedDeviceId: 1, registrationNo: 1 }` where `registrationNo > ""` — registration numbers are unique **per tablet** (replaces the institution-wide index)
+- `{ institutionId: 1, trialId: 1, assignedDeviceId: 1 }`
+- Partial unique: `{ institutionId: 1, clientMutationId: 1 }` where `clientMutationId` is a string
 - `{ institutionId: 1, trialId: 1, enrollmentDate: -1 }`
 - `{ institutionId: 1, trialId: 1, completionDate: 1 }`
 - `{ institutionId: 1, trialId: 1, groupType: 1 }`
@@ -467,13 +474,45 @@ Do **not** create a `trialStatistics` collection for Yenepoya v1. Introduce a ca
 
 ---
 
+### 4.12 `patient_transfers`
+
+Append-only history of patient ownership moves between tablets. Written in the same transaction as the `patients.assignedDeviceId` update.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `_id` | ObjectId | Yes | |
+| `institutionId` | ObjectId | Yes | |
+| `trialId` | String | Yes | |
+| `patientId` | ObjectId | Yes | Ref `patients` |
+| `fromDeviceId` | String | No | Previous `assignedDeviceId`; `null` when the patient was unassigned |
+| `toDeviceId` | String | Yes | New owner; must be an active `physical_devices` row of the same institution |
+| `transferredBy` | Object | Yes | `{ kind: "admin" \| "device", id, email? }` — admin user id, or the device id for tablet-initiated transfers |
+| `transferredAt` | Date | Yes | Server time of the transfer |
+| `reason` | String | No | Free text entered by the admin or clinician |
+| `createdAt` / `updatedAt` | Date | Yes | |
+
+**Rules (enforced in API):**
+- Blocked while the patient has an `ACTIVE` session (`ACTIVE_SESSION`)
+- Target must be registered and active for the institution, and different from the current owner (`INVALID_TARGET_DEVICE`)
+- Target must not already own a patient with the same `registrationNo` (`DUPLICATE_REGISTRATION_NO`)
+- Tablet transfers (`transferPatient`) also require the patient to belong to the calling tablet; admin transfers (`adminTransferPatient`) need `trial.patients:transfer`
+- The previous tablet learns about the move through `removedPatientIds` on its next `syncTablet` and deletes the patient locally
+
+**Indexes:**
+- `{ patientId: 1, transferredAt: -1 }`
+- `{ institutionId: 1, trialId: 1, fromDeviceId: 1, transferredAt: -1 }` — `removedPatientIds` lookup
+- `{ institutionId: 1, trialId: 1, transferredAt: -1 }`
+
+---
+
 ## 5. Relationship Diagram
 
 ```
 trials
   └── trialConfigurations (institutionId + trialId)
         │
-        ├── patients
+        ├── patients                    (assignedDeviceId → physical_devices)
+        │     ├── patient_transfers     (1:N ownership history)
         │     ├── sessions
         │     │     ├── preTherapy      (1:1, separate collection)
         │     │     ├── postTherapy     (1:1, separate collection)
@@ -523,6 +562,12 @@ Product DB `music_assets._id` is referenced as `trackId` in session readings.
 - [ ] Seed `trialConfigurations` linking Yenepoya `institutionId` → `skitii-trial-v1`
 - [ ] Generate **first weekly form PIN** (hashed) for the institute — then rotate every 14 days
 
+### Offline sync (v1.1)
+- [ ] Register every clinical tablet in product `physical_devices` for the institution (product admin → Devices). Unregistered tablets are rejected with `DEVICE_NOT_REGISTERED`
+- [ ] Run Trial migrations `20260928-client-mutation-id-partial-index` and `20260928-patient-assigned-device` (backfills `assignedDeviceId` from each patient's earliest session device and switches registration numbers to per-device uniqueness)
+- [ ] Reseed product RBAC so `trial.patients:transfer` and `trial.devices` exist
+- [ ] Optional: set `OFFLINE_SYNC_MAX_AGE_HOURS` (default `72`) — offline actions older than this are rejected on sync
+
 ---
 
 ## 8. Quick Reference — Indexes Only
@@ -531,7 +576,7 @@ Product DB `music_assets._id` is referenced as `trackId` in session readings.
 |------------|---------|
 | `trials` | unique `trialId` |
 | `trialConfigurations` | unique `(institutionId, trialId)`; `(institutionId, isActive)` |
-| `patients` | unique sparse `(institutionId, trialId, registrationNo)`; enrollment / completion / groupType |
+| `patients` | partial unique `(institutionId, trialId, assignedDeviceId, registrationNo)`; `(institutionId, trialId, assignedDeviceId)`; partial unique `(institutionId, clientMutationId)`; enrollment / completion / groupType |
 | `sessions` | `(patientId, sessionDate, shift)`; partial unique `ACTIVE`; `(status, expiresAt)` |
 | `preTherapy` | unique `sessionId` |
 | `postTherapy` | unique `sessionId` |
@@ -539,4 +584,5 @@ Product DB `music_assets._id` is referenced as `trackId` in session readings.
 | `weeklyForms` | unique `(patientId, studyWeek)` |
 | `weeklyFormPins` | unique active `(institutionId, trialId)` |
 | `missedSessionLogs` | unique `(institutionId, trialId, clinicalDate)` |
+| `patient_transfers` | `(patientId, transferredAt)`; `(institutionId, trialId, fromDeviceId, transferredAt)`; `(institutionId, trialId, transferredAt)` |
 | Product `music_assets` | `(controlPatientMusic, isActive)` |
