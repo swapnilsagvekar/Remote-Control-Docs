@@ -15,6 +15,7 @@
     "build:database": "node scripts/build-database-pdf.mjs",
     "build:weekly-forms": "node scripts/build-weekly-forms-pdf.mjs",
     "build:ai-roadmap": "node scripts/build-ai-learning-roadmap-pdf.mjs",
+    "build:genai-course": "node scripts/build-generative-ai-course-pdf.mjs",
     "build:pi-setup": "node scripts/build-pi-setup-pdf.mjs",
     "build:tablet-security": "node scripts/build-tablet-security-pdf.mjs",
     "build:admin-panel-design": "node scripts/build-admin-panel-design-pdf.mjs",
